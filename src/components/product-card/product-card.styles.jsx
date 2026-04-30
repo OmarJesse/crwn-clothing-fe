@@ -1,69 +1,51 @@
 import styled from "styled-components";
+import {
+  surface,
+  elevated,
+  textPrimary,
+  textSecondary,
+  borderSubtle,
+  borderBase,
+  primary,
+  primaryDark,
+  textInverse,
+  alpha,
+} from "../../styles/style-helpers";
 
 export const ProductCardContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  height: 420px;
+  min-height: 430px;
+  height: auto;
   align-items: center;
   position: relative;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   overflow: hidden;
-  background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
-  /* Gradient border effect */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 1.25rem;
-    padding: 2px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
+  background: ${({ theme }) => surface(theme)};
+  color: ${({ theme }) => textPrimary(theme)};
+  border: 1px solid ${({ theme }) => borderSubtle(theme)};
+  box-shadow: 0 10px 20px ${({ theme }) => alpha("#0f172a", 0.08)};
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease;
 
-  button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    width: 80%;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 3;
+  .add-to-cart-button {
+    position: static;
+    width: calc(100% - 2rem);
+    margin: 0 1rem 1rem;
+    transform: none;
+    opacity: 1;
+    pointer-events: all;
+    z-index: 2;
   }
 
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
-
-    &::before {
-      opacity: 1;
-    }
-
-    button {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-      pointer-events: all;
-    }
-  }
-
-  &:active {
     transform: translateY(-4px);
+    border-color: ${({ theme }) => primary(theme)}55;
+    box-shadow: 0 18px 30px ${({ theme }) => alpha("#0f172a", 0.16)};
   }
 
   @media (max-width: 768px) {
-    height: 380px;
+    min-height: 380px;
   }
 `;
 
@@ -72,7 +54,8 @@ export const CardImageWrapper = styled.div`
   width: 100%;
   height: 320px;
   overflow: hidden;
-  border-radius: 1.25rem 1.25rem 0 0;
+  border-radius: 1rem 1rem 0 0;
+  background: ${({ theme }) => elevated(theme)};
 
   img, svg {
     width: 100%;
@@ -84,13 +67,64 @@ export const CardImageWrapper = styled.div`
   ${ProductCardContainer}:hover & {
     img, svg {
       transform: scale(1.05);
-      filter: brightness(0.85);
+      filter: brightness(0.92);
     }
   }
 
   @media (max-width: 768px) {
     height: 280px;
   }
+`;
+
+export const SizeBadge = styled.span`
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: ${({ theme }) => surface(theme)};
+  color: ${({ theme }) => textPrimary(theme)};
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  z-index: 4;
+  border: 1px solid ${({ theme }) => borderBase(theme)};
+  box-shadow: 0 8px 18px ${({ theme }) => alpha("#0f172a", 0.18)};
+`;
+
+export const RecommendationMeta = styled.div`
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.9rem;
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 4;
+`;
+
+export const RecommendationChip = styled.span`
+  padding: 0.32rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: ${({ theme, tone }) =>
+    tone === "accent"
+      ? primaryDark(theme)
+      : tone === "info"
+      ? theme?.colors?.semantic?.info || "#0369a1"
+      : textSecondary(theme)};
+  background: ${({ theme, tone }) =>
+    tone === "accent"
+      ? `${primary(theme)}1f`
+      : tone === "info"
+      ? `${theme?.colors?.semantic?.info || "#0369a1"}1f`
+      : `${surface(theme)}e6`};
+  border: 1px solid ${({ theme }) => borderSubtle(theme)};
+  backdrop-filter: blur(8px);
 `;
 
 export const QuickViewButton = styled.button`
@@ -100,11 +134,10 @@ export const QuickViewButton = styled.button`
   transform: translateX(-50%) translateY(10px) !important;
   width: auto !important;
   padding: 0.75rem 1.5rem;
-  border-radius: 3rem;
+  border-radius: 999px;
   border: none;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: #6366F1;
+  background: ${({ theme }) => primaryDark(theme)};
+  color: ${({ theme }) => textInverse(theme)};
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
@@ -113,7 +146,7 @@ export const QuickViewButton = styled.button`
   pointer-events: none;
   transition: all 0.3s ease;
   z-index: 10;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 20px ${({ theme }) => alpha("#0f172a", 0.24)};
 
   ${ProductCardContainer}:hover & {
     opacity: 1 !important;
@@ -122,8 +155,7 @@ export const QuickViewButton = styled.button`
   }
 
   &:hover {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
+    background: ${({ theme }) => primary(theme)};
     transform: translateX(-50%) translateY(0) scale(1.05) !important;
   }
 `;
@@ -134,15 +166,15 @@ export const Footer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
-  border-radius: 0 0 1.25rem 1.25rem;
+  background: ${({ theme }) => surface(theme)};
+  border-radius: 0 0 1rem 1rem;
 `;
 
 export const Name = styled.span`
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   font-size: 1rem;
-  color: #111827;
+  color: ${({ theme }) => textPrimary(theme)};
   margin-bottom: 0;
   flex: 1;
   margin-right: 1rem;
@@ -153,11 +185,12 @@ export const Price = styled.span`
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
   font-size: 1.125rem;
-  color: #6366F1;
+  color: ${({ theme }) => textPrimary(theme)};
   white-space: nowrap;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-  border-radius: 0.75rem;
+  background: ${({ theme }) => elevated(theme)};
+  border-radius: 0.65rem;
+  border: 1px solid ${({ theme }) => borderSubtle(theme)};
 `;
 
 export const AdminActionBar = styled.div`
@@ -180,38 +213,31 @@ export const AdminActionBar = styled.div`
 export const AdminButton = styled.button`
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 999px;
   border: none;
-  background: ${({ variant }) => {
-    if (variant === 'delete') return 'linear-gradient(135deg, #f093fb, #f5576c)';
-    if (variant === 'edit') return 'linear-gradient(135deg, #667eea, #764ba2)';
-    return 'linear-gradient(135deg, #4facfe, #00f2fe)';
+  background: ${({ theme, variant }) => {
+    if (variant === "delete") return `${theme?.colors?.semantic?.error || "#EF4444"}26`;
+    if (variant === "edit") return `${primary(theme)}26`;
+    return elevated(theme);
   }};
-  color: white;
+  color: ${({ theme, variant }) => {
+    if (variant === "delete") return theme?.colors?.semantic?.error || "#EF4444";
+    if (variant === "edit") return primaryDark(theme);
+    return textSecondary(theme);
+  }};
   font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px ${({ variant }) => {
-    if (variant === 'delete') return 'rgba(245, 87, 108, 0.4)';
-    if (variant === 'edit') return 'rgba(102, 126, 234, 0.4)';
-    return 'rgba(79, 172, 254, 0.4)';
-  }};
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 14px ${({ theme }) => alpha("#0f172a", 0.14)};
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
 
   &:hover {
-    transform: scale(1.15) ${({ variant }) => variant === 'delete' ? 'rotate(90deg)' : 'translateY(-2px)'};
-    box-shadow: 0 6px 20px ${({ variant }) => {
-      if (variant === 'delete') return 'rgba(245, 87, 108, 0.6)';
-      if (variant === 'edit') return 'rgba(102, 126, 234, 0.6)';
-      return 'rgba(79, 172, 254, 0.6)';
-    }};
-  }
-
-  &:active {
-    transform: scale(0.95);
+    transform: scale(1.15)
+      ${({ variant }) => (variant === "delete" ? "rotate(90deg)" : "translateY(-2px)")};
+    box-shadow: 0 12px 20px ${({ theme }) => alpha("#0f172a", 0.2)};
   }
 
   &::before {
@@ -220,8 +246,8 @@ export const AdminButton = styled.button`
     bottom: -35px;
     left: 50%;
     transform: translateX(-50%) scale(0);
-    background: rgba(15, 23, 42, 0.95);
-    color: white;
+    background: ${({ theme }) => textPrimary(theme)};
+    color: ${({ theme }) => textInverse(theme)};
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
     font-size: 0.75rem;
@@ -230,7 +256,7 @@ export const AdminButton = styled.button`
     opacity: 0;
     transition: all 0.3s ease;
     pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px ${({ theme }) => alpha("#0f172a", 0.3)};
   }
 
   &:hover::before {
@@ -238,4 +264,3 @@ export const AdminButton = styled.button`
     transform: translateX(-50%) scale(1);
   }
 `;
-

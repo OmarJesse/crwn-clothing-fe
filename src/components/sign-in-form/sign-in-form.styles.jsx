@@ -1,24 +1,29 @@
 import styled from "styled-components";
+import {
+  surface,
+  textPrimary,
+  borderSubtle,
+  alpha,
+} from "../../styles/style-helpers";
 
 export const SignInContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 480px;
-  padding: 2.5rem;
-  background: white;
-  border-radius: 1.5rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-  
+  padding: 2.25rem;
+  background: ${({ theme }) => surface(theme)};
+  color: ${({ theme }) => textPrimary(theme)};
+  border-radius: 1.75rem;
+  border: 1px solid ${({ theme }) => borderSubtle(theme)};
+  box-shadow: 0 16px 50px ${({ theme }) => alpha("#0f172a", 0.12)};
+
   h2 {
     font-family: 'Poppins', sans-serif;
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
     margin: 0 0 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: ${({ theme }) => textPrimary(theme)};
   }
 
   @media (max-width: 768px) {

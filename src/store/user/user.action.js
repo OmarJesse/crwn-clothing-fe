@@ -26,11 +26,21 @@ export const signUpStart = (email, password, displayName) =>
     displayName,
   });
 
-export const signUpSuccess = (tokens, user) =>
+export const signUpSuccess = (tokens, user, onboardingRequired = false) =>
   createAction(USER_ACTION_TYPES.SIGN_UP_SUCCESS, {
     tokens,
     user,
+    onboardingRequired,
   });
+
+export const onboardingStart = (payload) =>
+  createAction(USER_ACTION_TYPES.ONBOARDING_START, payload);
+
+export const onboardingSuccess = (profile) =>
+  createAction(USER_ACTION_TYPES.ONBOARDING_SUCCESS, profile);
+
+export const onboardingFailed = (error) =>
+  createAction(USER_ACTION_TYPES.ONBOARDING_FAILED, error);
 
 export const signUpFailed = (error) =>
   createAction(USER_ACTION_TYPES.SIGN_UP_FAILED, error);
@@ -43,3 +53,9 @@ export const signOutSuccess = () =>
 
 export const signOutFailed = (error) =>
   createAction(USER_ACTION_TYPES.SIGN_OUT_FAILED, error);
+
+export const setRequiresOnboarding = (value) =>
+  createAction(USER_ACTION_TYPES.SET_REQUIRES_ONBOARDING, value);
+
+export const setStyleProfile = (styleProfile) =>
+  createAction(USER_ACTION_TYPES.SET_STYLE_PROFILE, styleProfile);

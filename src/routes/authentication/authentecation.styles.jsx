@@ -1,32 +1,40 @@
 import styled from "styled-components";
+import {
+  surface,
+  textPrimary,
+  borderSubtle,
+  primary,
+  secondary,
+  alpha,
+} from "../../styles/style-helpers";
 
 export const AuthenticationContainer = styled.div`
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  gap: 3rem;
-  max-width: 1400px;
-  width: 90%;
-  margin: 0 auto;
-  margin-top: 130px;
-  margin-bottom: 3rem;
-  padding: 3rem;
-  background: rgba(15, 23, 42, 0.6);
+  align-items: stretch;
+  gap: 2rem;
+  max-width: 1500px;
+  width: min(94%, 1500px);
+  margin: 0 auto 3rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(circle at top, ${({ theme }) => primary(theme)}1a, transparent 36%),
+    radial-gradient(circle at bottom, ${({ theme }) => secondary(theme)}14, transparent 32%),
+    ${({ theme }) => surface(theme)};
+  color: ${({ theme }) => textPrimary(theme)};
   backdrop-filter: blur(20px);
   border-radius: 2rem;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid ${({ theme }) => borderSubtle(theme)};
+  box-shadow: 0 20px 40px ${({ theme }) => alpha("#0f172a", 0.1)};
 
   @media (max-width: 1024px) {
     flex-direction: column;
     align-items: center;
     gap: 2rem;
-    margin-top: 105px;
   }
 
   @media (max-width: 768px) {
-    width: 95%;
-    padding: 2rem 1.5rem;
-    margin-top: 105px;
+    width: 96%;
+    padding: 1.25rem;
   }
 `;

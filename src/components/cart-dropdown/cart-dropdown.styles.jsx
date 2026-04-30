@@ -5,6 +5,17 @@ import {
   GoogleSignInButton,
   InvertedButton,
 } from "../button/button.styles";
+import {
+  surface,
+  textPrimary,
+  textSecondary,
+  textMuted,
+  borderSubtle,
+  borderBase,
+  primary,
+  overlay,
+  alpha,
+} from "../../styles/style-helpers";
 
 export const CartDropDownContainer = styled.div`
   position: fixed;
@@ -15,15 +26,15 @@ export const CartDropDownContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 2rem;
-  
-  /* Dark sidebar design */
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-left: 1px solid rgba(102, 126, 234, 0.2);
-  box-shadow: -10px 0 60px rgba(0, 0, 0, 0.5);
-  
+
+  background: ${({ theme }) => surface(theme)};
+  color: ${({ theme }) => textPrimary(theme)};
+  border-left: 1px solid ${({ theme }) => borderBase(theme)};
+  box-shadow: -10px 0 60px ${({ theme }) => alpha("#0f172a", 0.32)};
+
   z-index: 2000;
-  
-  transform: translateX(${({ isOpen }) => isOpen ? '0' : '100%'});
+
+  transform: translateX(${({ isOpen }) => (isOpen ? "0" : "100%")});
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
   ${BaseButton},${GoogleSignInButton},${InvertedButton} {
@@ -42,13 +53,13 @@ export const CartHeader = styled.div`
   align-items: center;
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  
+  border-bottom: 1px solid ${({ theme }) => borderSubtle(theme)};
+
   h2 {
     font-family: 'Poppins', sans-serif;
-    font-size: 1.75rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    color: white;
+    color: ${({ theme }) => textPrimary(theme)};
     margin: 0;
   }
 `;
@@ -59,25 +70,25 @@ export const CloseButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: ${({ theme }) => borderSubtle(theme)};
   border: none;
   border-radius: 0.5rem;
-  color: white;
+  color: ${({ theme }) => textPrimary(theme)};
   font-size: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  
+  transition: background 0.3s ease, transform 0.3s ease;
+
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => borderBase(theme)};
     transform: rotate(90deg);
   }
 `;
 
 export const EmptyMessage = styled.div`
   font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem;
+  font-size: 1.05rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  color: ${({ theme }) => textMuted(theme)};
   margin: auto;
   text-align: center;
 `;
@@ -86,23 +97,18 @@ export const CartItems = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
   overflow-y: auto;
   padding-right: 0.5rem;
   margin-bottom: 1.5rem;
-  
-  /* Custom Scrollbar for dark theme */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
+
+  &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: ${({ theme }) => borderSubtle(theme)};
     border-radius: 10px;
   }
-  
   &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: ${({ theme }) => primary(theme)};
     border-radius: 10px;
   }
 `;
@@ -113,11 +119,10 @@ export const CartOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: ${({ theme }) => overlay(theme)};
   backdrop-filter: blur(4px);
   z-index: 1999;
-  opacity: ${({ isOpen }) => isOpen ? 1 : 0};
-  visibility: ${({ isOpen }) => isOpen ? 'visible' : 'hidden'};
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+  visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
 `;
-

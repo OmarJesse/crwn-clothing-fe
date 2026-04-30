@@ -26,6 +26,34 @@ export const signUp = async (email, password, displayName) => {
   }
 };
 
+export const inferBodyProfile = async (token, profile) => {
+  try {
+    const response = await axios.post('/me/onboarding/infer', profile, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const updateBodyProfile = async (token, profile) => {
+  try {
+    const response = await axios.put('/me/body-profile', profile, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
 // Function to get the current authenticated user
 export const getCurrentUser = async (token) => {
   // redux

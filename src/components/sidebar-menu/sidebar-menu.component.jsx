@@ -85,6 +85,10 @@ const SidebarMenu = () => {
 
       <SidebarSection>
         <SectionTitle>Quick Links</SectionTitle>
+        <QuickLink onClick={() => navigate('/onboarding')}>
+          <QuickLinkIcon>📏</QuickLinkIcon>
+          <span>My Fit Profile</span>
+        </QuickLink>
         <QuickLink onClick={() => navigate('/shop')}>
           <QuickLinkIcon>🛍️</QuickLinkIcon>
           <span>All Products</span>

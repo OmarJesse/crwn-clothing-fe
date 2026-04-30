@@ -7,7 +7,6 @@ export const ProductFormContainer = styled.div`
   padding: 3rem 2rem;
   max-width: 700px;
   margin: 0 auto;
-  margin-top: 130px;
   margin-bottom: 3rem;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
@@ -28,7 +27,6 @@ export const ProductFormContainer = styled.div`
   }
 
   @media (max-width: 968px) {
-    margin-top: 105px;
     padding: 2rem 1.5rem;
   }
 

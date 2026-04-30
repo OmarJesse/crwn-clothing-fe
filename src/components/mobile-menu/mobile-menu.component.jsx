@@ -5,10 +5,12 @@ import {
   MobileMenuContent,
   MobileNavLink,
   MobileMenuHeader,
-  MobileMenuLinks
+  MobileMenuLinks,
+  MobileFitStatus,
+  MobileFitStatusMeta,
 } from './mobile-menu.styles';
 
-const MobileMenu = ({ isOpen, onClose, currentUser, signOutUser }) => {
+const MobileMenu = ({ isOpen, onClose, currentUser, bodyProfile, signOutUser }) => {
   const navigate = useNavigate();
 
   const handleNavClick = (path) => {
@@ -28,6 +30,17 @@ const MobileMenu = ({ isOpen, onClose, currentUser, signOutUser }) => {
         <MobileMenuContent>
           <MobileMenuHeader>
             <h2>Menu</h2>
+            {currentUser ? (
+              <MobileFitStatus to="/onboarding" $ready={Boolean(bodyProfile)}>
+                <span>{bodyProfile ? 'Fit Ready' : 'Fit Profile'}</span>
+                {bodyProfile ? (
+                  <MobileFitStatusMeta>
+                    {bodyProfile.preferredFit || 'Profile set'}
+                    {bodyProfile.confidence ? ` · ${Math.round(bodyProfile.confidence * 100)}%` : ''}
+                  </MobileFitStatusMeta>
+                ) : null}
+              </MobileFitStatus>
+            ) : null}
           </MobileMenuHeader>
           
           <MobileMenuLinks>

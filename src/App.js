@@ -6,6 +6,8 @@ import Home from "./routes/home/home.component";
 import Navigation from "./routes/navigation/navigation.component";
 import Authentecation from "./routes/authentication/authentecation.component";
 import Shop from "./routes/shop/shop.component";
+import Onboarding from "./routes/onboarding/onboarding.route";
+import ProductDetail from "./routes/product-detail/product-detail.component";
 
 import Checkout from "./routes/checkout/checkout.component";
 import USER_ACTION_TYPES from "./store/user/user.types";
@@ -14,7 +16,7 @@ import AddEditProductForm from "./routes/add-edit-product-form/add-edit-product-
 
 const App = () => {
   const dispatch = useDispatch();
-  const { tokens, shouldNavigateHome } = useSelector((state) => state.user);
+  const { tokens, shouldNavigateHome, requiresOnboarding } = useSelector((state) => state.user);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +29,15 @@ const App = () => {
   }, [tokens?.token]);
 
   useEffect(() => {
+    if (requiresOnboarding) {
+      navigate("/onboarding");
+      dispatch({
+        type: USER_ACTION_TYPES.SET_REQUIRES_ONBOARDING,
+        payload: false,
+      });
+      return;
+    }
+
     if (shouldNavigateHome) {
       navigate("/");
       dispatch({
@@ -47,7 +58,10 @@ const App = () => {
             path="product/:productId/edit"
             element={<AddEditProductForm />}
           />
-          <Route path="shop/*" element={<Shop />} />
+          <Route path="product/:productId" element={<ProductDetail />} />
+          <Route path="shop" element={<Shop />} />
+          <Route path="shop/:category" element={<Shop />} />
+          <Route path="onboarding" element={<Onboarding />} />
           <Route path="auth" element={<Authentecation />} />
           <Route path="checkout" element={<Checkout />} />
         </Route>

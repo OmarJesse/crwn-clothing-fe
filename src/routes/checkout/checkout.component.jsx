@@ -1,60 +1,131 @@
 import {
   CheckoutContainer,
+  ItemsColumn,
+  SummaryColumn,
+  SummaryCard,
+  CheckoutTitle,
+  CheckoutSubtitle,
   CheckoutHeader,
   HeaderBlock,
   Total,
+  SummaryHeader,
+  SummaryLine,
+  Divider,
+  FitStatusWrap,
+  FitStatusChip,
+  EmptyState,
 } from "./checkout.styles";
 import CheckoutItem from "../../components/checkout-item/checkout-item.component";
 import { useSelector } from "react-redux";
+import { useMemo } from "react";
 import {
   selectCartItems,
   selectCartTotal,
 } from "../../store/cart/cart.selector";
-import styled from "styled-components";
-
+import { getRecommendedSize } from "../../utils/size-recommendation";
 import PaymentForm from "../../components/payment-form/payment-form.component";
 
-const PageWrapper = styled.div`
-  margin-top: 130px;
-  padding: 2rem;
-  min-height: calc(100vh - 130px);
-
-  @media (max-width: 968px) {
-    margin-top: 105px;
-    padding: 1.5rem;
-  }
-`;
 const Checkout = () => {
   const total = useSelector(selectCartTotal);
   const cartItems = useSelector(selectCartItems);
+  const bodyProfile = useSelector((state) => state.user.bodyProfile);
+  const itemsWithSize = cartItems.filter((item) => item.size).length;
+  const quantityTotal = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  const fitSummary = useMemo(() => {
+    if (!bodyProfile) return null;
+    let matches = 0;
+    let differs = 0;
+    cartItems.forEach((item) => {
+      const recommended = getRecommendedSize(item, bodyProfile)?.recommendedSize;
+      if (!recommended || !item.size) return;
+      if (recommended === item.size) matches++;
+      else differs++;
+    });
+    return { matches, differs };
+  }, [cartItems, bodyProfile]);
 
   return (
-    <PageWrapper>
-      <CheckoutContainer>
+    <CheckoutContainer>
+      <ItemsColumn>
+        <CheckoutTitle>Your Checkout</CheckoutTitle>
+        <CheckoutSubtitle>
+          Review your selected sizes and quantities before payment.
+        </CheckoutSubtitle>
         <CheckoutHeader>
-          <HeaderBlock>
-            <span>Product</span>
-          </HeaderBlock>
-          <HeaderBlock>
-            <span>Description</span>
-          </HeaderBlock>
-          <HeaderBlock>
-            <span>Quantity</span>
-          </HeaderBlock>
-          <HeaderBlock>
-            <span>Price</span>
-          </HeaderBlock>
-          <HeaderBlock>
-            <span>Remove</span>
-          </HeaderBlock>
+          <HeaderBlock>Image</HeaderBlock>
+          <HeaderBlock>Product</HeaderBlock>
+          <HeaderBlock>Size</HeaderBlock>
+          <HeaderBlock>Quantity</HeaderBlock>
+          <HeaderBlock>Price</HeaderBlock>
+          <HeaderBlock>Remove</HeaderBlock>
         </CheckoutHeader>
-        {cartItems.map((cartItem) => {
-          return <CheckoutItem key={cartItem.id} cartItem={cartItem} />;
-        })}
-        <Total>Total: ${total}</Total>
-        <PaymentForm />
-      </CheckoutContainer>
-    </PageWrapper>
+
+        {cartItems.length === 0 ? (
+          <EmptyState>Your cart is empty. Pick something out and we'll size it for you.</EmptyState>
+        ) : (
+          cartItems.map((cartItem) => (
+            <CheckoutItem key={`${cartItem.id}-${cartItem.size || "na"}`} cartItem={cartItem} />
+          ))
+        )}
+      </ItemsColumn>
+
+      <SummaryColumn>
+        <SummaryCard>
+          <SummaryHeader>Order summary</SummaryHeader>
+          <SummaryLine>
+            <span>Items</span>
+            <span>{quantityTotal}</span>
+          </SummaryLine>
+          <SummaryLine>
+            <span>With selected size</span>
+            <span>{itemsWithSize}</span>
+          </SummaryLine>
+          {bodyProfile ? (
+            <SummaryLine>
+              <span>Fit profile</span>
+              <FitStatusWrap>
+                <FitStatusChip tone="success">Ready</FitStatusChip>
+                {bodyProfile.preferredFit ? (
+                  <FitStatusChip tone="accent">{bodyProfile.preferredFit}</FitStatusChip>
+                ) : null}
+                {bodyProfile.confidence ? (
+                  <FitStatusChip tone="accent">
+                    {Math.round(bodyProfile.confidence * 100)}%
+                  </FitStatusChip>
+                ) : null}
+              </FitStatusWrap>
+            </SummaryLine>
+          ) : null}
+          {fitSummary && (fitSummary.matches > 0 || fitSummary.differs > 0) ? (
+            <SummaryLine>
+              <span>Size match</span>
+              <FitStatusWrap>
+                {fitSummary.differs === 0 ? (
+                  <FitStatusChip tone="success">All match ✓</FitStatusChip>
+                ) : (
+                  <>
+                    <FitStatusChip tone="success">{fitSummary.matches} match</FitStatusChip>
+                    <FitStatusChip tone="accent">{fitSummary.differs} differ</FitStatusChip>
+                  </>
+                )}
+              </FitStatusWrap>
+            </SummaryLine>
+          ) : null}
+          <Divider />
+          <Total>
+            <span>Total</span>
+            <span>${total}</span>
+          </Total>
+        </SummaryCard>
+
+        <SummaryCard>
+          <SummaryHeader>Payment</SummaryHeader>
+          <PaymentForm />
+        </SummaryCard>
+      </SummaryColumn>
+    </CheckoutContainer>
   );
 };
+
 export default Checkout;

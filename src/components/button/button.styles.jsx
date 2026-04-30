@@ -2,66 +2,46 @@ import styled from "styled-components";
 import { SpinnerContainer } from "../spinner/spinner.styles";
 
 export const BaseButton = styled.button`
-  min-width: 180px;
+  min-width: 160px;
   width: auto;
-  height: 56px;
-  letter-spacing: 0.05em;
-  padding: 0 2.5rem;
-  font-size: 0.95rem;
-  font-family: 'Poppins', sans-serif;
+  height: 44px;
+  letter-spacing: 0.01em;
+  padding: 0 1.2rem;
+  font-size: 0.88rem;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   border: none;
-  border-radius: 0.75rem;
+  border-radius: 0.7rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
-  
-  /* Primary gradient background */
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  background: #0f172a;
   color: white;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-    
-    &::before {
-      opacity: 1;
-    }
+    background: #1e293b;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 20px rgba(15, 23, 42, 0.22);
   }
-  
+
   &:active {
     transform: translateY(0);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 6px 10px rgba(15, 23, 42, 0.18);
   }
-  
+
   &:disabled {
-    background: #E5E7EB;
-    color: #9CA3AF;
+    background: #e2e8f0;
+    color: #94a3b8;
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
-    
-    &::before {
-      display: none;
-    }
   }
 
   /* Ensure text is above the gradient overlay */
@@ -72,50 +52,40 @@ export const BaseButton = styled.button`
 `;
 
 export const GoogleSignInButton = styled(BaseButton)`
-  background: linear-gradient(135deg, #4285f4 0%, #357ae8 100%);
-  box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
-
-  &::before {
-    background: linear-gradient(135deg, #357ae8 0%, #2a63c8 100%);
-  }
+  background: #2563eb;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
 
   &:hover {
-    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
+    background: #1d4ed8;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
   }
-  
+
   &:active {
-    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.24);
   }
 `;
 
 export const InvertedButton = styled(BaseButton)`
   background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-
-  &::before {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 
   &:hover {
-    color: white;
-    border-color: transparent;
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-    
-    &::before {
-      opacity: 1;
-    }
+    color: #0f172a;
+    background: #f8fafc;
+    border-color: #94a3b8;
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
   }
-  
+
   &:active {
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.08);
   }
-  
+
   &:disabled {
     background: white;
-    color: #9CA3AF;
-    border-color: #E5E7EB;
+    color: #94a3b8;
+    border-color: #e2e8f0;
   }
 `;
 

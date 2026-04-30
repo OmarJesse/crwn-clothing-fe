@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 export const MobileMenuOverlay = styled.div`
   position: fixed;
@@ -40,6 +41,9 @@ export const MobileMenuHeader = styled.div`
   margin-bottom: 3rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   
   h2 {
     font-family: 'Poppins', sans-serif;
@@ -77,4 +81,31 @@ export const MobileNavLink = styled.div`
   &:active {
     transform: translateX(4px);
   }
+`;
+
+export const MobileFitStatus = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid ${({ $ready }) => ($ready ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.18)')};
+  background: ${({ $ready }) => ($ready ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.08)')};
+  color: white;
+  text-decoration: none;
+
+  span:first-child {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+`;
+
+export const MobileFitStatusMeta = styled.span`
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.9;
+  letter-spacing: 0.03em;
 `;

@@ -217,6 +217,42 @@ export const ProductDescription = styled.p`
   margin: 0;
 `;
 
+export const RecommendationPanel = styled.div`
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.12));
+  border-radius: 1rem;
+  padding: 1rem;
+  display: grid;
+  gap: 0.7rem;
+`;
+
+export const RecommendationTitle = styled.h4`
+  margin: 0;
+  color: #d1fae5;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+`;
+
+export const RecommendationStats = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+export const RecommendationChip = styled.span`
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.16);
+  color: #e5e7eb;
+`;
+
+export const FitHint = styled.span`
+  color: #d1d5db;
+  font-size: 0.82rem;
+`;
+
 export const SizeSelector = styled.div`
   display: flex;
   flex-direction: column;
@@ -236,8 +272,9 @@ export const SizeSelector = styled.div`
 `;
 
 export const SizeOption = styled.button`
-  width: 48px;
+  min-width: 48px;
   height: 48px;
+  padding: 0 0.7rem;
   border-radius: 0.75rem;
   border: 2px solid ${({ isSelected }) => 
     isSelected ? 'rgba(102, 126, 234, 0.8)' : 'rgba(255, 255, 255, 0.2)'};

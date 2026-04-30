@@ -12,6 +12,7 @@ import { stripePromise } from "./utils/stripe/stripe.utils";
 import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "./queryClient";
 import './store/network/interceptor';
+import { ThemeProvider } from './contexts/theme-context';
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -20,9 +21,11 @@ root.render(
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <Elements stripe={stripePromise}>
-              <App />
-            </Elements>
+            <ThemeProvider>
+              <Elements stripe={stripePromise}>
+                <App />
+              </Elements>
+            </ThemeProvider>
           </BrowserRouter>
         </QueryClientProvider>
       </PersistGate>

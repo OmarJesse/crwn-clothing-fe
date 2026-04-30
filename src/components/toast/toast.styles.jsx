@@ -32,7 +32,7 @@ const toast = keyframes`
 
 export const ToastContainer = styled.div`
   position: fixed;
-  top: 110px;
+  top: 1rem;
   right: 2rem;
   z-index: 10000;
   display: flex;
@@ -41,7 +41,7 @@ export const ToastContainer = styled.div`
   pointer-events: none;
 
   @media (max-width: 768px) {
-    top: 90px;
+    top: 0.9rem;
     right: 1rem;
     left: 1rem;
   }
