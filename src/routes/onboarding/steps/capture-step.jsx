@@ -19,6 +19,7 @@ import {
   drawOverlay,
   estimateLivePose,
   prewarmDetectors,
+  loadImage,
 } from "../inference/landmarks";
 import {
   inferMeasurementsFromPose,
@@ -169,28 +170,38 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
 
   const runInference = useCallback(
     async (dataUrl, source) => {
+      // Show the captured photo IMMEDIATELY so the user gets visual confirmation
+      // they can move out of frame. Inference runs in the background after.
+      wizard.setCapture({ photoDataUrl: dataUrl, source, capturedAt: Date.now() });
+
       setRunning(true);
       setErrorMsg("");
-      setProgress("Detecting body pose…");
+      setProgress("Analyzing…");
 
       const heightCm = Number(wizard.state.measurements.heightCm) || 170;
       const weightKg = Number(wizard.state.measurements.weightKg) || 70;
 
       try {
-        const result = await runInferenceOnImage(dataUrl, {
-          onProgress: (stage) => {
-            if (stage === "face") setProgress("Detecting face for height anchor…");
-            if (stage === "pose") setProgress("Detecting body pose…");
-            if (stage === "done") setProgress("");
-          },
-          // Face is needed for the IPD-based height estimate. ~1 s extra cost
-          // on capture, but only on capture (live preview still uses pose-only).
-          useFace: true,
-        });
+        // Decode the JPEG once. The same image is consumed by face inference,
+        // pose inference, and palette quantization, all of which previously
+        // decoded it independently. This alone saves ~150 ms on a phone.
+        const img = await loadImage(dataUrl);
 
-        // Try to estimate height from face IPD + pose nose→ankle. Falls back
-        // to whatever the user typed (or 170 cm default) if face / feet aren't
-        // detected with confidence.
+        // Fire all three concurrently. Face + pose internally run in parallel
+        // too (inside runInferenceOnImage). The total wall-clock cost is
+        // max(face, pose, palette) instead of their sum.
+        const [result, styleProfile] = await Promise.all([
+          runInferenceOnImage(img, {
+            onProgress: (stage) => {
+              if (stage === "inference") setProgress("Detecting pose + face…");
+              if (stage === "done") setProgress("");
+            },
+            useFace: true,
+          }),
+          inferStyleFromImage(img, {}),
+        ]);
+
+        // Now the cheap math: height estimate, derived measurements, body shape.
         const estimatedHeight = inferHeightFromLandmarks({
           pose: result.pose,
           face: result.face,
@@ -211,30 +222,30 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
           measurements = fallbackMeasurementsFromHeightWeight(effectiveHeight, weightKg);
         }
 
-        // If we estimated height from landmarks, surface it as part of the
-        // returned measurement bundle so the form pre-fills cleanly.
         if (estimatedHeight) {
           measurements = { ...measurements, heightCm: estimatedHeight };
         }
 
         const bodyShape = inferBodyShape(measurements);
 
-        setProgress("Analyzing palette…");
-        const styleProfile = await inferStyleFromImage(dataUrl, measurements);
+        // Re-resolve the silhouette in styleProfile using the just-derived
+        // measurements (the parallel inferStyleFromImage call only had {}).
+        const resolvedStyle = styleProfile
+          ? { ...styleProfile, silhouette: bodyShape || styleProfile.silhouette }
+          : null;
 
-        wizard.setCapture({ photoDataUrl: dataUrl, source, capturedAt: Date.now() });
         wizard.setInference({
           confidence: result.confidence,
           face: !!result.face,
           pose: !!result.pose,
           usedFallback,
           bodyShape,
-          style: styleProfile,
+          style: resolvedStyle,
           heightInferred: Boolean(estimatedHeight),
           errors: result.errors,
         });
         wizard.applyInferredMeasurements(measurements);
-        if (styleProfile) dispatch(setStyleProfile(styleProfile));
+        if (resolvedStyle) dispatch(setStyleProfile(resolvedStyle));
 
         if (usedFallback) {
           setErrorMsg(
@@ -243,16 +254,15 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
         }
       } catch (err) {
         setErrorMsg("Inference failed. You can still type your measurements on the next step.");
-        const measurements = fallbackMeasurementsFromHeightWeight(heightCm, weightKg);
-        wizard.setCapture({ photoDataUrl: dataUrl, source, capturedAt: Date.now() });
+        const fallback = fallbackMeasurementsFromHeightWeight(heightCm, weightKg);
         wizard.setInference({ confidence: 0, face: false, pose: false, usedFallback: true });
-        wizard.applyInferredMeasurements(measurements);
+        wizard.applyInferredMeasurements(fallback);
       } finally {
         setRunning(false);
         setProgress("");
       }
     },
-    [wizard]
+    [wizard, dispatch]
   );
 
   const captureFromWebcam = useCallback(async () => {

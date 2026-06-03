@@ -101,16 +101,27 @@ export const inferSilhouette = ({ shoulderCm, waistCm, hipCm }) => {
   return "rectangle";
 };
 
-export const inferStyleFromImage = async (dataUrl, measurements = {}) => {
-  if (!dataUrl) return null;
+/**
+ * Quantize a captured frame into the user's dominant palette + bucket.
+ * Accepts either a dataURL (will decode) or a pre-loaded HTMLImageElement
+ * — pass the same image we already loaded for pose/face inference to skip
+ * a redundant decode of the same 720×960 JPEG.
+ */
+export const inferStyleFromImage = async (source, measurements = {}) => {
+  if (!source) return null;
 
-  const image = await new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = dataUrl;
-  }).catch(() => null);
+  let image;
+  if (typeof source !== "string" && source && source.naturalWidth >= 0) {
+    image = source;
+  } else if (typeof source === "string") {
+    image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = source;
+    }).catch(() => null);
+  }
 
   if (!image) return null;
 
