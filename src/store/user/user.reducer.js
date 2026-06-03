@@ -14,6 +14,10 @@ export const INITIAL_STATE = {
 export const userReducer = (state = INITIAL_STATE, action) => {
   const { type, payload } = action;
   switch (type) {
+    case USER_ACTION_TYPES.SIGN_IN_START:
+    case USER_ACTION_TYPES.SIGN_UP_START:
+      return { ...state, isLoading: true, error: null };
+
     case USER_ACTION_TYPES.SIGN_IN_SUCCESS:
     case USER_ACTION_TYPES.SIGN_UP_SUCCESS: {
       const completed = Boolean(payload.user?.onboardingCompletedAt);
@@ -24,6 +28,7 @@ export const userReducer = (state = INITIAL_STATE, action) => {
         bodyProfile: completed ? payload.user : null,
         requiresOnboarding: Boolean(payload.onboardingRequired || !completed),
         shouldNavigateHome: !Boolean(payload.onboardingRequired || !completed),
+        isLoading: false,
         error: null,
       };
     }

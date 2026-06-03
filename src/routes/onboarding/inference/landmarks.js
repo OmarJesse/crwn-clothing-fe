@@ -78,9 +78,14 @@ export const loadLivePoseDetector = async () => {
 // big difference on first visit. Loaders are idempotent so this is safe to
 // call multiple times. Fire-and-forget pattern from the caller.
 export const prewarmDetectors = async ({ onProgress } = {}) => {
+  // Backend + Lightning fire eagerly (they drive the live preview and the
+  // capture inference). Face landmarks fire too because the capture path now
+  // uses FaceMesh for the IPD-based height anchor — pre-loading saves ~2 s
+  // off the first capture-click.
   const tasks = [
     ["backend", initBackend],
     ["live-pose", loadLivePoseDetector],
+    ["face", loadFaceDetector],
   ];
   for (const [label, fn] of tasks) {
     try {

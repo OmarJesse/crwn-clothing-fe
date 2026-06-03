@@ -1,32 +1,17 @@
-import styled from "styled-components";
-import {
-  surface,
-  textPrimary,
-  borderSubtle,
-  alpha,
-} from "../../styles/style-helpers";
-
-export const SignUpContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 480px;
-  padding: 2.25rem;
-  background: ${({ theme }) => surface(theme)};
-  color: ${({ theme }) => textPrimary(theme)};
-  border-radius: 1.75rem;
-  border: 1px solid ${({ theme }) => borderSubtle(theme)};
-  box-shadow: 0 16px 50px ${({ theme }) => alpha("#0f172a", 0.12)};
-
-  h2 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem;
-    color: ${({ theme }) => textPrimary(theme)};
-  }
-
-  @media (max-width: 768px) {
-    padding: 2rem;
-  }
-`;
+// Back-compat re-export so any legacy imports of "sign-up.styles" keep working.
+// The actual component now reuses the shared auth form styles defined alongside
+// SignInForm so the two flows stay visually consistent.
+export {
+  AuthFormContainer as SignUpContainer,
+  AuthFormHeader,
+  AuthField,
+  AuthInput,
+  AuthLabel,
+  AuthErrorNote,
+  PasswordWrapper,
+  PasswordToggle,
+  AuthSubmit,
+  AuthHelperRow,
+  PasswordStrengthBar,
+  PasswordHint,
+} from "../sign-in-form/sign-in-form.styles.jsx";

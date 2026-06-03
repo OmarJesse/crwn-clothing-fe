@@ -67,13 +67,14 @@ export const SearchField = styled.label`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.55rem 0.85rem;
+  padding: 0.7rem 1rem;
+  min-height: 2.75rem;
   border-radius: 999px;
   background: ${({ theme }) => elevated(theme)};
   border: 1px solid ${({ theme }) => borderBase(theme)};
 
   span.icon {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     color: ${({ theme }) => textMuted(theme)};
   }
 
@@ -84,6 +85,7 @@ export const SearchField = styled.label`
     background: transparent;
     color: ${({ theme }) => textPrimary(theme)};
     font: inherit;
+    min-height: 1.75rem;
 
     &::placeholder {
       color: ${({ theme }) => textMuted(theme)};
@@ -92,6 +94,7 @@ export const SearchField = styled.label`
 
   @media (max-width: 720px) {
     grid-column: 1 / -1;
+    padding: 0.85rem 1.1rem;
   }
 `;
 
@@ -144,13 +147,14 @@ export const ChipRow = styled.div`
 
 export const Chip = styled.button`
   appearance: none;
-  padding: 0.32rem 0.7rem;
+  padding: 0.42rem 0.85rem;
+  min-height: 2.5rem;
   border-radius: 999px;
   border: 1px solid ${({ theme, $active }) => ($active ? primary(theme) : borderBase(theme))};
   background: ${({ theme, $active }) =>
     $active ? `${primary(theme)}14` : elevated(theme)};
   color: ${({ theme, $active }) => ($active ? primaryDark(theme) : textSecondary(theme))};
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -164,6 +168,13 @@ export const Chip = styled.button`
   }
 
   small { color: ${({ theme }) => textMuted(theme)}; font-weight: 500; }
+
+  @media (max-width: 700px) {
+    /* Apple HIG / Material Design recommend ≥ 44 px touch targets. */
+    min-height: 2.75rem;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.88rem;
+  }
 `;
 
 export const ActiveChip = styled.span`
@@ -335,13 +346,15 @@ export const SizeButtons = styled.div`
 
 export const SizeButton = styled.button`
   appearance: none;
-  min-width: 2.5rem;
-  padding: 0.45rem 0.7rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border: 1px solid ${({ theme, $active }) => ($active ? primary(theme) : borderBase(theme))};
   background: ${({ theme, $active }) => ($active ? `${primary(theme)}14` : elevated(theme))};
   color: ${({ theme, $active }) => ($active ? primaryDark(theme) : textPrimary(theme))};
   font-weight: 600;
+  font-size: 0.92rem;
   cursor: pointer;
   transition: border-color 150ms ease, transform 150ms ease;
 

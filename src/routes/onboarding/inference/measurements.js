@@ -7,6 +7,55 @@ const findPoint = (keypoints, name) => {
   return k && (k.score === undefined || k.score >= KEYPOINT_THRESHOLD) ? k : null;
 };
 
+// MediaPipe FaceMesh outer-eye-corner indices. Distance between these two
+// landmarks is ~9–10 cm in adults (mean ≈ 9.5 cm, σ ≈ 0.5 cm) — far more
+// consistent across the population than skull or face length, which makes
+// it a clean scale anchor for 2D photos.
+const OUTER_EYE_LEFT = 33;
+const OUTER_EYE_RIGHT = 263;
+const OUTER_EYE_DISTANCE_CM = 9.5;
+
+/**
+ * Estimate the subject's standing height from pose + face landmarks alone.
+ *
+ * Method: use the outer eye corner distance from FaceMesh as a scale anchor
+ * (≈ 9.5 cm), convert to pixels-per-cm, then measure nose→ankle in pose-pixel
+ * space and convert to cm. Nose→ankle on a frontal full-body shot is ≈ 87 %
+ * of total height in adults (anthropometric reference), so we divide by 0.87.
+ *
+ * Returns null if either input is missing or the frame doesn't include the
+ * subject's feet. Caller should treat the result as a noisy suggestion
+ * (typical error ± 5 cm) and let the user confirm in the measurements step.
+ */
+export const inferHeightFromLandmarks = ({ pose, face }) => {
+  if (!pose || !Array.isArray(pose.keypoints) || !face?.keypoints) return null;
+
+  const lEye = face.keypoints[OUTER_EYE_LEFT];
+  const rEye = face.keypoints[OUTER_EYE_RIGHT];
+  if (!lEye || !rEye) return null;
+
+  const eyeSpanPx = Math.hypot(lEye.x - rEye.x, lEye.y - rEye.y);
+  if (!eyeSpanPx) return null;
+  const pixelsPerCm = eyeSpanPx / OUTER_EYE_DISTANCE_CM;
+
+  const nose = findPoint(pose.keypoints, "nose");
+  const lAnkle = findPoint(pose.keypoints, "left_ankle");
+  const rAnkle = findPoint(pose.keypoints, "right_ankle");
+  if (!nose) return null;
+  const ankle = lAnkle && rAnkle
+    ? (lAnkle.y > rAnkle.y ? lAnkle : rAnkle)
+    : (lAnkle || rAnkle);
+  if (!ankle) return null;
+
+  const noseToAnklePx = Math.abs(ankle.y - nose.y);
+  if (noseToAnklePx <= 0) return null;
+
+  const noseToAnkleCm = noseToAnklePx / pixelsPerCm;
+  const estimatedHeight = noseToAnkleCm / 0.87;
+
+  return clamp(round(estimatedHeight, 1), 130, 220);
+};
+
 const round = (n, p = 1) => Math.round(n * 10 ** p) / 10 ** p;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));

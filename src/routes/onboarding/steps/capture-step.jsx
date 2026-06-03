@@ -24,6 +24,7 @@ import {
   inferMeasurementsFromPose,
   fallbackMeasurementsFromHeightWeight,
   inferBodyShape,
+  inferHeightFromLandmarks,
 } from "../inference/measurements";
 import { inferStyleFromImage } from "../../../utils/style-inference";
 import { setStyleProfile } from "../../../store/user/user.action";
@@ -178,22 +179,42 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
       try {
         const result = await runInferenceOnImage(dataUrl, {
           onProgress: (stage) => {
+            if (stage === "face") setProgress("Detecting face for height anchor…");
             if (stage === "pose") setProgress("Detecting body pose…");
             if (stage === "done") setProgress("");
           },
+          // Face is needed for the IPD-based height estimate. ~1 s extra cost
+          // on capture, but only on capture (live preview still uses pose-only).
+          useFace: true,
         });
+
+        // Try to estimate height from face IPD + pose nose→ankle. Falls back
+        // to whatever the user typed (or 170 cm default) if face / feet aren't
+        // detected with confidence.
+        const estimatedHeight = inferHeightFromLandmarks({
+          pose: result.pose,
+          face: result.face,
+        });
+        const userTypedHeight = Number(wizard.state.measurements.heightCm) || null;
+        const effectiveHeight = estimatedHeight ?? userTypedHeight ?? 170;
 
         let measurements = inferMeasurementsFromPose({
           pose: result.pose,
           frameWidth: result.frameWidth,
           frameHeight: result.frameHeight,
-          heightCm,
+          heightCm: effectiveHeight,
         });
 
         let usedFallback = false;
         if (!measurements) {
           usedFallback = true;
-          measurements = fallbackMeasurementsFromHeightWeight(heightCm, weightKg);
+          measurements = fallbackMeasurementsFromHeightWeight(effectiveHeight, weightKg);
+        }
+
+        // If we estimated height from landmarks, surface it as part of the
+        // returned measurement bundle so the form pre-fills cleanly.
+        if (estimatedHeight) {
+          measurements = { ...measurements, heightCm: estimatedHeight };
         }
 
         const bodyShape = inferBodyShape(measurements);
@@ -209,6 +230,7 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
           usedFallback,
           bodyShape,
           style: styleProfile,
+          heightInferred: Boolean(estimatedHeight),
           errors: result.errors,
         });
         wizard.applyInferredMeasurements(measurements);
@@ -435,6 +457,9 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
                 </Tag>
                 <Tag>Confidence {(inference.confidence * 100).toFixed(0)}%</Tag>
                 {inference.bodyShape ? <Tag>Shape: {inference.bodyShape}</Tag> : null}
+                {inference.heightInferred ? (
+                  <Tag $tone="ok">📐 Height inferred</Tag>
+                ) : null}
                 {inference.usedFallback ? <Tag $tone="warn">Estimated</Tag> : null}
               </InferenceTags>
               {inference.style ? (
