@@ -36,6 +36,10 @@ const PERMISSION_STATES = {
   DENIED: "denied",
 };
 
+// Tunables for the auto-capture handshake.
+const AUTO_STREAK_FRAMES = 10;       // ~1 s of stable detection at our 95 ms throttle
+const AUTO_COUNTDOWN_SECONDS = 2;    // visible "auto-capturing in 2…1…" window
+
 const CaptureStep = ({ wizard, onAdvance, onBack }) => {
   const dispatch = useDispatch();
   const [mode, setMode] = useState(PERMISSION_STATES.PROMPT);
@@ -44,7 +48,9 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
   const [running, setRunning] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [livePoseDetected, setLivePoseDetected] = useState(false);
-  const [warmupStatus, setWarmupStatus] = useState({ ready: false, phase: "backend" });
+  const [warmupReady, setWarmupReady] = useState(false);
+  const [autoCountdown, setAutoCountdown] = useState(null);
+  const [autoDisabled, setAutoDisabled] = useState(false);
   const webcamRef = useRef(null);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
@@ -52,6 +58,18 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
   const rafRef = useRef(0);
   const liveBusyRef = useRef(false);
   const lastFrameAtRef = useRef(0);
+  // Refs the live tick reads imperatively so it doesn't need to re-bind on every
+  // state change. Keep these in sync from state via small useEffect mirrors.
+  const streakRef = useRef(0);
+  const autoDisabledRef = useRef(false);
+  const runningRef = useRef(false);
+  const hasPhotoRef = useRef(false);
+  const countdownActiveRef = useRef(false);
+
+  useEffect(() => { runningRef.current = running; }, [running]);
+  useEffect(() => { autoDisabledRef.current = autoDisabled; }, [autoDisabled]);
+  useEffect(() => { hasPhotoRef.current = Boolean(wizard.state.capture.photoDataUrl); }, [wizard.state.capture.photoDataUrl]);
+  useEffect(() => { countdownActiveRef.current = autoCountdown !== null; }, [autoCountdown]);
 
   useEffect(() => {
     if (wizard.state.capture.photoDataUrl && wizard.state.inference) {
@@ -59,22 +77,16 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
     }
   }, [wizard.state.capture.photoDataUrl, wizard.state.inference]);
 
-  // Pre-warm the TF.js detectors the moment this step mounts — while the
-  // user is reading the permission cards, the WebGL backend boots and the
-  // model weights download in parallel. By the time they click "Use camera"
-  // (typically 5–10s later) the detectors are usually fully ready.
+  // The onboarding shell fires prewarmDetectors() as soon as the wizard mounts,
+  // so by the time the user lands here the models are usually already warm.
+  // We re-call it here as a safety net (idempotent — resolves instantly off the
+  // module-level cache if the first call finished). The Promise resolution is
+  // what flips warmupReady; we don't bother with per-phase progress anymore
+  // because Lightning + WebGL is the only thing being loaded now.
   useEffect(() => {
     let cancelled = false;
-    prewarmDetectors({
-      onProgress: (phase, status) => {
-        if (cancelled) return;
-        if (status === "loading") setWarmupStatus({ ready: false, phase });
-        if (status === "ready" && phase === "pose") {
-          setWarmupStatus({ ready: true, phase });
-        }
-      },
-    }).then(() => {
-      if (!cancelled) setWarmupStatus({ ready: true, phase: "ready" });
+    prewarmDetectors().then(() => {
+      if (!cancelled) setWarmupReady(true);
     });
     return () => {
       cancelled = true;
@@ -119,6 +131,24 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
         drawOverlay(liveCanvasRef.current, video, pose);
         const detected = !!pose && pose.keypoints.some((k) => (k.score ?? 0) > 0.45);
         setLivePoseDetected(detected);
+
+        // Auto-capture handshake: increment a streak counter while detection is
+        // stable. When it crosses the threshold and no countdown / capture is
+        // already running, kick off the visible countdown the user can cancel.
+        if (detected) {
+          streakRef.current += 1;
+          if (
+            streakRef.current >= AUTO_STREAK_FRAMES &&
+            !countdownActiveRef.current &&
+            !autoDisabledRef.current &&
+            !runningRef.current &&
+            !hasPhotoRef.current
+          ) {
+            setAutoCountdown(AUTO_COUNTDOWN_SECONDS);
+          }
+        } else {
+          streakRef.current = 0;
+        }
       } catch {
         // ignore — try again next frame
       } finally {
@@ -140,7 +170,7 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
     async (dataUrl, source) => {
       setRunning(true);
       setErrorMsg("");
-      setProgress("Loading detection models…");
+      setProgress("Detecting body pose…");
 
       const heightCm = Number(wizard.state.measurements.heightCm) || 170;
       const weightKg = Number(wizard.state.measurements.weightKg) || 70;
@@ -148,7 +178,6 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
       try {
         const result = await runInferenceOnImage(dataUrl, {
           onProgress: (stage) => {
-            if (stage === "face") setProgress("Detecting face landmarks…");
             if (stage === "pose") setProgress("Detecting body pose…");
             if (stage === "done") setProgress("");
           },
@@ -214,6 +243,29 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
     await runInference(dataUrl, "camera");
   }, [runInference]);
 
+  // Auto-capture countdown driver. Decrements once per second; on hitting 0,
+  // dispatches captureFromWebcam and clears the countdown. Skipped if the user
+  // disabled auto-capture or if a capture is already in flight.
+  useEffect(() => {
+    if (autoCountdown === null) return undefined;
+    if (autoCountdown <= 0) {
+      setAutoCountdown(null);
+      streakRef.current = 0;
+      if (!runningRef.current && !hasPhotoRef.current && !autoDisabledRef.current) {
+        captureFromWebcam();
+      }
+      return undefined;
+    }
+    const id = setTimeout(() => setAutoCountdown((current) => (current == null ? null : current - 1)), 1000);
+    return () => clearTimeout(id);
+  }, [autoCountdown, captureFromWebcam]);
+
+  const cancelAutoCapture = useCallback(() => {
+    setAutoCountdown(null);
+    streakRef.current = 0;
+    setAutoDisabled(true);
+  }, []);
+
   const handleFile = useCallback(
     async (event) => {
       const file = event.target.files?.[0];
@@ -241,6 +293,8 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
     wizard.setCapture({ photoDataUrl: "", source: null, capturedAt: null });
     wizard.setInference(null);
     setErrorMsg("");
+    setAutoDisabled(false);   // re-enable auto-capture for the next attempt
+    streakRef.current = 0;
   };
 
   const onUserMediaError = (err) => {
@@ -278,10 +332,10 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
               <span>Enter your measurements manually.</span>
             </PermissionCard>
           </PermissionGrid>
-          <InlineNote $tone={warmupStatus.ready ? "success" : "info"}>
-            {warmupStatus.ready
+          <InlineNote $tone={warmupReady ? "success" : "info"}>
+            {warmupReady
               ? "✓ AI models ready — capture will be instant."
-              : `Preparing AI models in the background (${warmupStatus.phase})…`}
+              : "Preparing AI models in the background…"}
           </InlineNote>
         </>
       )}
@@ -318,11 +372,35 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
               ref={liveCanvasRef}
               data-mirrored={facingMode === "user" ? "true" : "false"}
             />
-            <StagePill $live={livePoseDetected}>
+            <StagePill $live={livePoseDetected || autoCountdown !== null}>
               <span className="dot" />
-              {livePoseDetected ? "Body tracked" : "Searching for body…"}
+              {autoCountdown !== null
+                ? `Auto-capturing in ${autoCountdown}s`
+                : livePoseDetected
+                ? "Body tracked"
+                : "Searching for body…"}
             </StagePill>
           </Stage>
+          {autoCountdown !== null ? (
+            <InlineNote $tone="info">
+              Body locked in — auto-capturing in {autoCountdown}s. Stand still.{" "}
+              <button
+                type="button"
+                onClick={cancelAutoCapture}
+                style={{
+                  marginLeft: "0.4rem",
+                  background: "transparent",
+                  border: 0,
+                  color: "inherit",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  font: "inherit",
+                }}
+              >
+                Cancel
+              </button>
+            </InlineNote>
+          ) : null}
           <ActionRow>
             <GhostAction
               type="button"
@@ -331,7 +409,11 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
               Flip camera
             </GhostAction>
             <PrimaryAction type="button" onClick={captureFromWebcam} disabled={running}>
-              {running ? progress || "Analyzing…" : "Capture frame"}
+              {running
+                ? progress || "Analyzing…"
+                : autoCountdown !== null
+                ? `Capturing in ${autoCountdown}…`
+                : "Capture frame"}
             </PrimaryAction>
           </ActionRow>
         </>

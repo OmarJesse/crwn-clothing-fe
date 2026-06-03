@@ -7,6 +7,7 @@ import CaptureStep from "./steps/capture-step";
 import MeasurementsStep from "./steps/measurements-step";
 import PreferencesStep from "./steps/preferences-step";
 import ReviewStep from "./steps/review-step";
+import { prewarmDetectors } from "./inference/landmarks";
 import {
   Page,
   Card,
@@ -29,6 +30,14 @@ const Onboarding = () => {
   const { tokens, currentUser, bodyProfile } = useSelector((state) => state.user);
   const isAuthenticated = Boolean(tokens?.token);
   const isEditing = isAuthenticated && Boolean(bodyProfile);
+
+  // Start streaming the TF.js WebGL backend + Lightning weights the moment the
+  // wizard mounts. By the time the user finishes typing their email/password
+  // (or arrives back here in edit mode), the models are typically ready, so
+  // clicking "Use camera" goes straight to first-inference with no extra wait.
+  useEffect(() => {
+    prewarmDetectors();
+  }, []);
 
   useEffect(() => {
     // Logged out (or session cleared): force the wizard back to step 1

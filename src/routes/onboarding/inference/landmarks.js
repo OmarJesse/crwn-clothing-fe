@@ -72,17 +72,15 @@ export const loadLivePoseDetector = async () => {
   return livePosePromise;
 };
 
-// Kick all three detectors off in parallel, intended for use the moment the
-// user enters the Camera step (while they're still reading the permission
-// cards). All loaders are idempotent, so this is safe to call multiple times.
-// Resolves with { ready: true } once everything is warm; the returned promise
-// is fire-and-forget if the caller doesn't await it.
+// Pre-warm only the lightweight detector path we actually use at runtime
+// (WebGL backend + MoveNet Lightning). Skipping Thunder and FaceMesh during
+// pre-warm saves ~8 MB of model weight download and ~3 s of detector init —
+// big difference on first visit. Loaders are idempotent so this is safe to
+// call multiple times. Fire-and-forget pattern from the caller.
 export const prewarmDetectors = async ({ onProgress } = {}) => {
   const tasks = [
     ["backend", initBackend],
     ["live-pose", loadLivePoseDetector],
-    ["face", loadFaceDetector],
-    ["pose", loadPoseDetector],
   ];
   for (const [label, fn] of tasks) {
     try {
@@ -106,7 +104,17 @@ const loadImage = (dataUrl) =>
     img.src = dataUrl;
   });
 
-export const runInferenceOnImage = async (dataUrl, { onProgress } = {}) => {
+/**
+ * Single-shot capture inference. Defaults to MoveNet Lightning (fast),
+ * which is the same detector used for the live preview. Measurements are
+ * anchored to the user-entered height, so the marginally lower Lightning
+ * accuracy (vs Thunder) does not propagate to the cm values. Set `useThunder`
+ * if you want to take the +5 s hit for a higher OKS at capture time.
+ */
+export const runInferenceOnImage = async (
+  dataUrl,
+  { onProgress, useFace = false, useThunder = false } = {}
+) => {
   const result = {
     face: null,
     pose: null,
@@ -128,28 +136,31 @@ export const runInferenceOnImage = async (dataUrl, { onProgress } = {}) => {
     return result;
   }
 
-  onProgress?.("face");
-  try {
-    const detector = await loadFaceDetector();
-    const faces = await detector.estimateFaces(img);
-    if (faces.length > 0) {
-      result.face = {
-        keypoints: faces[0].keypoints,
-        box: faces[0].box,
-      };
-      result.confidence = Math.max(result.confidence, 0.6);
+  if (useFace) {
+    onProgress?.("face");
+    try {
+      const detector = await loadFaceDetector();
+      const faces = await detector.estimateFaces(img);
+      if (faces.length > 0) {
+        result.face = { keypoints: faces[0].keypoints, box: faces[0].box };
+        result.confidence = Math.max(result.confidence, 0.6);
+      }
+    } catch (err) {
+      result.errors.push("face-inference-failed");
     }
-  } catch (err) {
-    result.errors.push("face-inference-failed");
   }
 
   onProgress?.("pose");
   try {
-    const poseDetector = await loadPoseDetector();
+    const poseDetector = useThunder
+      ? await loadPoseDetector()
+      : await loadLivePoseDetector();
     const poses = await poseDetector.estimatePoses(img, { flipHorizontal: false });
     if (poses.length > 0) {
       result.pose = poses[0];
-      const avgScore = poses[0].keypoints.reduce((acc, k) => acc + (k.score || 0), 0) / poses[0].keypoints.length;
+      const avgScore =
+        poses[0].keypoints.reduce((acc, k) => acc + (k.score || 0), 0) /
+        poses[0].keypoints.length;
       result.confidence = Math.max(result.confidence, avgScore);
     }
   } catch (err) {
