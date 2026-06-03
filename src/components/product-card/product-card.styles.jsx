@@ -45,7 +45,19 @@ export const ProductCardContainer = styled.div`
   }
 
   @media (max-width: 768px) {
-    min-height: 380px;
+    min-height: 320px;
+  }
+
+  @media (max-width: 700px) {
+    min-height: 280px;
+    border-radius: 0.75rem;
+
+    .add-to-cart-button {
+      width: calc(100% - 1rem);
+      margin: 0 0.5rem 0.5rem;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.78rem;
+    }
   }
 `;
 
@@ -72,7 +84,12 @@ export const CardImageWrapper = styled.div`
   }
 
   @media (max-width: 768px) {
-    height: 280px;
+    height: 220px;
+  }
+
+  @media (max-width: 700px) {
+    height: 180px;
+    border-radius: 0.75rem 0.75rem 0 0;
   }
 `;
 
@@ -168,6 +185,13 @@ export const Footer = styled.div`
   align-items: center;
   background: ${({ theme }) => surface(theme)};
   border-radius: 0 0 1rem 1rem;
+  gap: 0.5rem;
+
+  @media (max-width: 700px) {
+    padding: 0.55rem 0.65rem;
+    border-radius: 0;
+    gap: 0.3rem;
+  }
 `;
 
 export const Name = styled.span`
@@ -179,6 +203,17 @@ export const Name = styled.span`
   flex: 1;
   margin-right: 1rem;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  @media (max-width: 700px) {
+    font-size: 0.82rem;
+    margin-right: 0;
+    line-height: 1.25;
+  }
 `;
 
 export const Price = styled.span`
@@ -191,6 +226,12 @@ export const Price = styled.span`
   background: ${({ theme }) => elevated(theme)};
   border-radius: 0.65rem;
   border: 1px solid ${({ theme }) => borderSubtle(theme)};
+
+  @media (max-width: 700px) {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.55rem;
+    border-radius: 0.45rem;
+  }
 `;
 
 export const AdminActionBar = styled.div`

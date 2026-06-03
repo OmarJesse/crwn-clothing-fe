@@ -45,6 +45,11 @@ export const HeroContainer = styled.div`
   @media (max-width: 968px) {
     min-height: 78vh;
   }
+
+  @media (max-width: 700px) {
+    min-height: 60vh;
+    border-radius: 1.1rem;
+  }
 `;
 
 export const HeroBackground = styled.div`

@@ -71,6 +71,11 @@ export const DockPanel = styled.main`
   min-height: 100vh;
   padding: clamp(1rem, 2vw, 1.5rem);
   padding-bottom: 8.5rem;
+
+  @media (max-width: 700px) {
+    padding: 0.75rem;
+    padding-bottom: 5.5rem;
+  }
 `;
 
 export const AppDock = styled.div`
@@ -83,6 +88,12 @@ export const AppDock = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+
+  @media (max-width: 700px) {
+    bottom: 0.5rem;
+    width: calc(100vw - 0.5rem);
+    gap: 0;
+  }
 `;
 
 export const DockSurface = styled.div`
@@ -102,6 +113,18 @@ export const DockSurface = styled.div`
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
+  }
+
+  @media (max-width: 700px) {
+    /* Switch off the desktop 3-column grid; render DockGroup + DockActions
+       as a single horizontal row. The hidden DockBrand collapses to nothing. */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 1.1rem;
   }
 `;
 
@@ -129,6 +152,10 @@ export const DockBrand = styled(Link)`
     box-shadow: ${({ theme }) => theme?.shadows?.colored || "0 10px 24px rgba(99,102,241,0.3)"};
     color: white;
   }
+
+  @media (max-width: 700px) {
+    display: none;
+  }
 `;
 
 export const DockTag = styled.span`
@@ -143,6 +170,10 @@ export const DockTag = styled.span`
   color: ${({ theme }) => textSecondary(theme)};
   background: ${({ theme }) => primary(theme)}14;
   border: 1px solid ${({ theme }) => primary(theme)}26;
+
+  @media (max-width: 700px) {
+    display: none;
+  }
 `;
 
 export const DockGroup = styled.div`
@@ -151,6 +182,13 @@ export const DockGroup = styled.div`
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
+
+  @media (max-width: 700px) {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    flex: 1;
+    justify-content: space-around;
+  }
 `;
 
 export const DockActions = styled.div`
@@ -161,6 +199,10 @@ export const DockActions = styled.div`
 
   @media (max-width: 900px) {
     justify-content: center;
+  }
+
+  @media (max-width: 700px) {
+    gap: 0.3rem;
   }
 `;
 
@@ -187,6 +229,13 @@ const dockControl = ({ theme }) => `
     border-color: ${primary(theme)}66;
     transform: translateY(-1px);
   }
+
+  @media (max-width: 700px) {
+    min-height: 2.4rem;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.78rem;
+    border-radius: 0.8rem;
+  }
 `;
 
 export const DockLink = styled(Link)`
@@ -203,6 +252,12 @@ export const DockIconLink = styled(Link)`
   min-width: 2.8rem;
   position: relative;
   font-size: 1.05rem;
+
+  @media (max-width: 700px) {
+    padding: 0.5rem;
+    min-width: 2.5rem;
+    font-size: 1rem;
+  }
 `;
 
 export const DockIconBadge = styled.span`
@@ -219,6 +274,18 @@ export const DockIconBadge = styled.span`
 export const ThemeToggle = styled(DockButton)`
   font-weight: 700;
   min-width: 6.6rem;
+
+  /* On phone-sized screens the theme stays whatever was last persisted in
+     localStorage; we hide the toggle from the dock so the remaining six items
+     (Home, Shop, fit icon, Search, account, cart) can sit comfortably on a
+     single row at 320 px viewport widths. */
+  @media (max-width: 700px) {
+    display: none;
+  }
+`;
+
+export const DockIconLinkMobile = styled.span`
+  display: none;
 `;
 
 export const DockHint = styled.p`
@@ -227,6 +294,10 @@ export const DockHint = styled.p`
   color: ${({ theme }) => textSecondary(theme)};
   font-size: 0.82rem;
   letter-spacing: 0.01em;
+
+  @media (max-width: 700px) {
+    display: none;
+  }
 `;
 
 export const DockTitle = styled.h2`
@@ -358,6 +429,13 @@ export const ProfilePopover = styled.div`
 export const ProfileButton = styled.button`
   ${(props) => dockControl(props)}
   position: relative;
+
+  @media (max-width: 700px) {
+    /* On mobile show only the green dot + first initial */
+    padding: 0.5rem 0.7rem;
+    max-width: 5.5rem;
+    overflow: hidden;
+  }
 `;
 
 export const ProfileChip = styled.span`

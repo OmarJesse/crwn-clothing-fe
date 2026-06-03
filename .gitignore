@@ -26,3 +26,6 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+# Playwright audit artifacts
+mobile-audit/

@@ -23,6 +23,10 @@ export const Page = styled.div`
     radial-gradient(900px 600px at 100% 110%, ${({ theme }) => theme?.colors?.secondary?.main || "#ec4899"}1f, transparent 55%),
     ${({ theme }) => bg(theme)};
   color: ${({ theme }) => textPrimary(theme)};
+
+  @media (max-width: 700px) {
+    padding: 0.75rem;
+  }
 `;
 
 export const Card = styled.section`
@@ -35,6 +39,11 @@ export const Card = styled.section`
   box-shadow: 0 24px 56px rgba(15, 23, 42, 0.12);
   border: 1px solid ${({ theme }) => borderSubtle(theme)};
   backdrop-filter: blur(14px);
+
+  @media (max-width: 700px) {
+    padding: 1rem;
+    border-radius: 1.1rem;
+  }
 `;
 
 export const HeaderRow = styled.div`
@@ -56,6 +65,21 @@ export const HeaderRow = styled.div`
     color: ${({ theme }) => textSecondary(theme)};
     max-width: 520px;
   }
+
+  /* On phone-sized screens the marketing description duplicates the on-screen
+     step UI; hiding it gives the wizard form a lot more vertical room. */
+  @media (max-width: 700px) {
+    margin-bottom: 0.85rem;
+
+    h1 {
+      font-size: 1.2rem;
+      margin: 0.4rem 0 0;
+    }
+
+    p {
+      display: none;
+    }
+  }
 `;
 
 export const Pill = styled.span`
@@ -67,6 +91,11 @@ export const Pill = styled.span`
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+
+  @media (max-width: 700px) {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.7rem;
+  }
 `;
 
 export const Stepper = styled.ol`

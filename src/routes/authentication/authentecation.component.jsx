@@ -42,6 +42,13 @@ const AuthHero = styled.div`
     font-size: 1.02rem;
     line-height: 1.6;
   }
+
+  /* On phone-sized screens hide the marketing copy entirely — the sign-in/up
+     forms below carry the same information visually and the hero takes up
+     almost half a viewport on iPhone SE for no functional gain. */
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const PillRow = styled.div`
