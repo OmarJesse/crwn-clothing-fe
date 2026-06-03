@@ -1,3 +1,24 @@
+// One-time backend bootstrap shared by every detector. Loading the WebGL
+// backend is by far the biggest single cost of "first inference" — about
+// 1.5–2s on a mid-range laptop. Doing it once globally means subsequent
+// detector loads only pay the model-weight download cost.
+let backendPromise;
+const initBackend = async () => {
+  if (!backendPromise) {
+    backendPromise = (async () => {
+      const tf = await import("@tensorflow/tfjs-core");
+      await import("@tensorflow/tfjs-backend-webgl");
+      await tf.setBackend("webgl");
+      await tf.ready();
+      return tf;
+    })().catch((err) => {
+      backendPromise = undefined;
+      throw err;
+    });
+  }
+  return backendPromise;
+};
+
 let facePromise;
 let posePromise;
 let livePosePromise;
@@ -5,13 +26,8 @@ let livePosePromise;
 const loadFaceDetector = async () => {
   if (!facePromise) {
     facePromise = (async () => {
-      const tf = await import("@tensorflow/tfjs-core");
-      await import("@tensorflow/tfjs-backend-webgl");
+      await initBackend();
       const faceLandmarksDetection = await import("@tensorflow-models/face-landmarks-detection");
-
-      await tf.setBackend("webgl");
-      await tf.ready();
-
       return faceLandmarksDetection.createDetector(
         faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
         { runtime: "tfjs", maxFaces: 1, refineLandmarks: true }
@@ -27,13 +43,8 @@ const loadFaceDetector = async () => {
 const loadPoseDetector = async () => {
   if (!posePromise) {
     posePromise = (async () => {
-      const tf = await import("@tensorflow/tfjs-core");
-      await import("@tensorflow/tfjs-backend-webgl");
+      await initBackend();
       const posedetection = await import("@tensorflow-models/pose-detection");
-
-      await tf.setBackend("webgl");
-      await tf.ready();
-
       return posedetection.createDetector(posedetection.SupportedModels.MoveNet, {
         modelType: posedetection.movenet.modelType.SINGLEPOSE_THUNDER,
       });
@@ -48,13 +59,8 @@ const loadPoseDetector = async () => {
 export const loadLivePoseDetector = async () => {
   if (!livePosePromise) {
     livePosePromise = (async () => {
-      const tf = await import("@tensorflow/tfjs-core");
-      await import("@tensorflow/tfjs-backend-webgl");
+      await initBackend();
       const posedetection = await import("@tensorflow-models/pose-detection");
-
-      await tf.setBackend("webgl");
-      await tf.ready();
-
       return posedetection.createDetector(posedetection.SupportedModels.MoveNet, {
         modelType: posedetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
       });
@@ -64,6 +70,31 @@ export const loadLivePoseDetector = async () => {
     });
   }
   return livePosePromise;
+};
+
+// Kick all three detectors off in parallel, intended for use the moment the
+// user enters the Camera step (while they're still reading the permission
+// cards). All loaders are idempotent, so this is safe to call multiple times.
+// Resolves with { ready: true } once everything is warm; the returned promise
+// is fire-and-forget if the caller doesn't await it.
+export const prewarmDetectors = async ({ onProgress } = {}) => {
+  const tasks = [
+    ["backend", initBackend],
+    ["live-pose", loadLivePoseDetector],
+    ["face", loadFaceDetector],
+    ["pose", loadPoseDetector],
+  ];
+  for (const [label, fn] of tasks) {
+    try {
+      onProgress?.(label, "loading");
+      await fn();
+      onProgress?.(label, "ready");
+    } catch (err) {
+      onProgress?.(label, "failed");
+      // Swallow — capture step will retry on demand if needed.
+    }
+  }
+  return { ready: true };
 };
 
 const loadImage = (dataUrl) =>

@@ -14,7 +14,12 @@ import {
   Tag,
   InferenceTags,
 } from "../onboarding.styles";
-import { runInferenceOnImage, drawOverlay, estimateLivePose } from "../inference/landmarks";
+import {
+  runInferenceOnImage,
+  drawOverlay,
+  estimateLivePose,
+  prewarmDetectors,
+} from "../inference/landmarks";
 import {
   inferMeasurementsFromPose,
   fallbackMeasurementsFromHeightWeight,
@@ -39,6 +44,7 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
   const [running, setRunning] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [livePoseDetected, setLivePoseDetected] = useState(false);
+  const [warmupStatus, setWarmupStatus] = useState({ ready: false, phase: "backend" });
   const webcamRef = useRef(null);
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
@@ -52,6 +58,28 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
       setMode((current) => (current === PERMISSION_STATES.PROMPT ? PERMISSION_STATES.UPLOAD : current));
     }
   }, [wizard.state.capture.photoDataUrl, wizard.state.inference]);
+
+  // Pre-warm the TF.js detectors the moment this step mounts — while the
+  // user is reading the permission cards, the WebGL backend boots and the
+  // model weights download in parallel. By the time they click "Use camera"
+  // (typically 5–10s later) the detectors are usually fully ready.
+  useEffect(() => {
+    let cancelled = false;
+    prewarmDetectors({
+      onProgress: (phase, status) => {
+        if (cancelled) return;
+        if (status === "loading") setWarmupStatus({ ready: false, phase });
+        if (status === "ready" && phase === "pose") {
+          setWarmupStatus({ ready: true, phase });
+        }
+      },
+    }).then(() => {
+      if (!cancelled) setWarmupStatus({ ready: true, phase: "ready" });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Live pose overlay loop — runs while camera mode is active and no captured photo yet.
   useEffect(() => {
@@ -235,20 +263,27 @@ const CaptureStep = ({ wizard, onAdvance, onBack }) => {
       </p>
 
       {mode === PERMISSION_STATES.PROMPT && (
-        <PermissionGrid>
-          <PermissionCard type="button" onClick={() => setMode(PERMISSION_STATES.CAMERA)}>
-            <strong>📸 Use camera</strong>
-            <span>Stand 2m back so your full body is in frame.</span>
-          </PermissionCard>
-          <PermissionCard type="button" onClick={() => fileInputRef.current?.click()}>
-            <strong>🖼️ Upload photo</strong>
-            <span>JPG or PNG, ideally a full-body shot.</span>
-          </PermissionCard>
-          <PermissionCard type="button" onClick={handleSkip}>
-            <strong>⏭️ Skip — type instead</strong>
-            <span>Enter your measurements manually.</span>
-          </PermissionCard>
-        </PermissionGrid>
+        <>
+          <PermissionGrid>
+            <PermissionCard type="button" onClick={() => setMode(PERMISSION_STATES.CAMERA)}>
+              <strong>📸 Use camera</strong>
+              <span>Stand 2m back so your full body is in frame.</span>
+            </PermissionCard>
+            <PermissionCard type="button" onClick={() => fileInputRef.current?.click()}>
+              <strong>🖼️ Upload photo</strong>
+              <span>JPG or PNG, ideally a full-body shot.</span>
+            </PermissionCard>
+            <PermissionCard type="button" onClick={handleSkip}>
+              <strong>⏭️ Skip — type instead</strong>
+              <span>Enter your measurements manually.</span>
+            </PermissionCard>
+          </PermissionGrid>
+          <InlineNote $tone={warmupStatus.ready ? "success" : "info"}>
+            {warmupStatus.ready
+              ? "✓ AI models ready — capture will be instant."
+              : `Preparing AI models in the background (${warmupStatus.phase})…`}
+          </InlineNote>
+        </>
       )}
 
       {mode === PERMISSION_STATES.DENIED && (
