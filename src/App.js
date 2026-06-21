@@ -8,6 +8,7 @@ import Authentecation from "./routes/authentication/authentecation.component";
 import Shop from "./routes/shop/shop.component";
 import Onboarding from "./routes/onboarding/onboarding.route";
 import ProductDetail from "./routes/product-detail/product-detail.component";
+import FitInsights from "./routes/fit-insights/fit-insights.component";
 
 import Checkout from "./routes/checkout/checkout.component";
 import USER_ACTION_TYPES from "./store/user/user.types";
@@ -61,6 +62,7 @@ const App = () => {
           <Route path="product/:productId" element={<ProductDetail />} />
           <Route path="shop" element={<Shop />} />
           <Route path="shop/:category" element={<Shop />} />
+          <Route path="insights" element={<FitInsights />} />
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="auth" element={<Authentecation />} />
           <Route path="checkout" element={<Checkout />} />

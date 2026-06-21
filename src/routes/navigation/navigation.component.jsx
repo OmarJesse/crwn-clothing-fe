@@ -131,6 +131,7 @@ const Navigation = () => {
           <DockGroup>
             <DockLink to="/">Home</DockLink>
             <DockLink to="/shop">Shop</DockLink>
+            <DockLink to="/insights">Insights</DockLink>
             <DockIconLink
               to="/onboarding"
               aria-label={bodyProfile ? "Edit fit profile" : "Set up fit profile"}
