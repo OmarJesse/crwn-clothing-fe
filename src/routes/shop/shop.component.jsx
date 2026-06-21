@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -84,6 +84,40 @@ const Shop = () => {
     update({ category: categoryParam || null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryParam]);
+
+  // Windowed rendering: only mount a page of cards at a time and grow the
+  // window as the shopper scrolls. Rendering all ~500 animated cards at once
+  // was the source of the jank; this keeps the DOM small while preserving the
+  // global (recommendation-aware) sort over the full in-memory list.
+  const PAGE_SIZE = 24;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef(null);
+
+  // Reset the window whenever the filtered/sorted result set changes.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [products]);
+
+  // Grow the window when the sentinel scrolls into view.
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, products.length));
+        }
+      },
+      { rootMargin: "600px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [products.length, visibleCount]);
+
+  const visibleProducts = useMemo(
+    () => products.slice(0, visibleCount),
+    [products, visibleCount]
+  );
 
   const handleCategoryChip = (name) => {
     if (filters.category === name) {
@@ -312,22 +346,34 @@ const Shop = () => {
               </button>
             </Empty>
           ) : (
-            <Grid>
-              <AnimatePresence>
-                {products.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18, delay: Math.min(index * 0.02, 0.18) }}
+            <>
+              <Grid>
+                <AnimatePresence>
+                  {visibleProducts.map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      layout
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.18, delay: Math.min((index % PAGE_SIZE) * 0.02, 0.18) }}
+                    >
+                      <ProductCard product={product} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </Grid>
+              {visibleCount < products.length ? (
+                <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "1.5rem" }}>
+                  <SmallButton
+                    type="button"
+                    onClick={() => setVisibleCount((c) => Math.min(c + PAGE_SIZE, products.length))}
                   >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </Grid>
+                    Load more ({products.length - visibleCount} left)
+                  </SmallButton>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       </Layout>
