@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -85,39 +85,43 @@ const Shop = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryParam]);
 
-  // Windowed rendering: only mount a page of cards at a time and grow the
-  // window as the shopper scrolls. Rendering all ~500 animated cards at once
-  // was the source of the jank; this keeps the DOM small while preserving the
-  // global (recommendation-aware) sort over the full in-memory list.
+  // Numbered, paginated rendering. Rendering all ~500 animated cards at once
+  // was the source of the jank; we sort/filter the full list (so the global,
+  // recommendation-aware ranking is preserved) and then page the result,
+  // mounting only PAGE_SIZE cards at a time.
   const PAGE_SIZE = 24;
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const sentinelRef = useRef(null);
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
 
-  // Reset the window whenever the filtered/sorted result set changes.
+  // Snap back to page 1 whenever the filtered/sorted result set changes.
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setPage(1);
   }, [products]);
 
-  // Grow the window when the sentinel scrolls into view.
+  // Clamp if the result set shrank below the current page.
   useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((c) => Math.min(c + PAGE_SIZE, products.length));
-        }
-      },
-      { rootMargin: "600px" }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [products.length, visibleCount]);
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
 
   const visibleProducts = useMemo(
-    () => products.slice(0, visibleCount),
-    [products, visibleCount]
+    () => products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [products, page]
   );
+
+  const goToPage = (p) => {
+    setPage(Math.min(Math.max(1, p), pageCount));
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // A compact page-number window around the current page.
+  const pageNumbers = useMemo(() => {
+    const span = 2;
+    const start = Math.max(1, page - span);
+    const end = Math.min(pageCount, page + span);
+    const nums = [];
+    for (let p = start; p <= end; p += 1) nums.push(p);
+    return nums;
+  }, [page, pageCount]);
 
   const handleCategoryChip = (name) => {
     if (filters.category === name) {
@@ -363,13 +367,50 @@ const Shop = () => {
                   ))}
                 </AnimatePresence>
               </Grid>
-              {visibleCount < products.length ? (
-                <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "1.5rem" }}>
-                  <SmallButton
-                    type="button"
-                    onClick={() => setVisibleCount((c) => Math.min(c + PAGE_SIZE, products.length))}
-                  >
-                    Load more ({products.length - visibleCount} left)
+              {pageCount > 1 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.4rem",
+                    flexWrap: "wrap",
+                    padding: "1.75rem 0",
+                  }}
+                >
+                  <SmallButton type="button" disabled={page === 1} onClick={() => goToPage(page - 1)}>
+                    ‹ Prev
+                  </SmallButton>
+                  {pageNumbers[0] > 1 ? (
+                    <>
+                      <SmallButton type="button" onClick={() => goToPage(1)}>1</SmallButton>
+                      {pageNumbers[0] > 2 ? <span style={{ opacity: 0.5 }}>…</span> : null}
+                    </>
+                  ) : null}
+                  {pageNumbers.map((p) => (
+                    <SmallButton
+                      key={p}
+                      type="button"
+                      onClick={() => goToPage(p)}
+                      style={
+                        p === page
+                          ? { background: "var(--color-primary)", color: "#fff", fontWeight: 700 }
+                          : undefined
+                      }
+                    >
+                      {p}
+                    </SmallButton>
+                  ))}
+                  {pageNumbers[pageNumbers.length - 1] < pageCount ? (
+                    <>
+                      {pageNumbers[pageNumbers.length - 1] < pageCount - 1 ? (
+                        <span style={{ opacity: 0.5 }}>…</span>
+                      ) : null}
+                      <SmallButton type="button" onClick={() => goToPage(pageCount)}>{pageCount}</SmallButton>
+                    </>
+                  ) : null}
+                  <SmallButton type="button" disabled={page === pageCount} onClick={() => goToPage(page + 1)}>
+                    Next ›
                   </SmallButton>
                 </div>
               ) : null}
