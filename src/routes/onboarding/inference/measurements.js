@@ -67,14 +67,33 @@ export const computeBmi = (heightCm, weightKg) => {
   return round(Number(weightKg) / (m * m), 1);
 };
 
-export const inferBodyShape = ({ shoulderCm, waistCm, hipCm }) => {
-  if (!shoulderCm || !waistCm || !hipCm) return null;
-  const shoulderToHip = shoulderCm / hipCm;
-  const waistToHip = waistCm / hipCm;
-  if (waistToHip < 0.75 && Math.abs(shoulderToHip - 1) < 0.08) return "hourglass";
-  if (shoulderToHip > 1.07) return "inverted-triangle";
-  if (shoulderToHip < 0.93) return "triangle";
-  if (waistToHip > 0.9) return "oval";
+// FFIT body-shape classification — bust(=chest)/waist/hip circumferences.
+// Kept byte-for-byte equivalent to the API's classifyBodyShape (bodyShape.ts)
+// so the shape shown during onboarding always matches the persisted profile.
+// Reference: Simmons, Istook & Devarajan (2004), "FFIT for Apparel."
+const BALANCE_TOL = 0.07; // bust & hip within ±7% of hip = balanced
+const DEFINED_WAIST = 0.85; // waist ≤ 85% of both bust and hip = defined
+const UNDEFINED_WAIST_WHR = 0.9;
+
+export const inferBodyShape = ({ chestCm, waistCm, hipCm }) => {
+  const bust = Number(chestCm);
+  const waist = Number(waistCm);
+  const hip = Number(hipCm);
+  if (!bust || !waist || !hip) return null;
+
+  const bustHipDiff = bust - hip;
+  const balanced = Math.abs(bustHipDiff) <= BALANCE_TOL * hip;
+  const whr = waist / hip;
+  const wbr = waist / bust;
+  const definedWaist = whr <= DEFINED_WAIST && wbr <= DEFINED_WAIST;
+
+  if (definedWaist) {
+    if (balanced) return "hourglass";
+    return hip > bust ? "triangle" : "inverted-triangle";
+  }
+  if (bustHipDiff > BALANCE_TOL * hip) return "inverted-triangle";
+  if (bustHipDiff < -BALANCE_TOL * hip) return "triangle";
+  if (whr > UNDEFINED_WAIST_WHR || waist >= bust) return "oval";
   return "rectangle";
 };
 
