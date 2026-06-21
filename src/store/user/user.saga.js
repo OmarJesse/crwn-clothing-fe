@@ -30,13 +30,14 @@ export function* signInStart({ payload: { email, password } }) {
   }
 }
 
-export function* signUp({ payload: { email, password, displayName } }) {
+export function* signUp({ payload: { email, password, displayName, gender } }) {
   try {
     const tokens = yield call(
       signUpWithEmail,
       email,
       password,
-      displayName
+      displayName,
+      gender
     );
     yield call(setTokensAndGetCurrentUserProfile, tokens, 'signUp', tokens.onboardingRequired);
   } catch (error) {

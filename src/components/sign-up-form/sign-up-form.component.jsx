@@ -29,6 +29,7 @@ const computePasswordStrength = (password) => {
 
 const SignUpForm = () => {
   const [displayName, setDisplayName] = useState("");
+  const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -67,7 +68,9 @@ const SignUpForm = () => {
       setLocalError("Passwords do not match.");
       return;
     }
-    dispatch(signUpStart(email.trim(), password, displayName.trim()));
+    dispatch(
+      signUpStart(email.trim(), password, displayName.trim(), gender || null)
+    );
   };
 
   const displayedError = localError || remoteError;
@@ -91,6 +94,21 @@ const SignUpForm = () => {
             onChange={(e) => setDisplayName(e.target.value)}
             required
           />
+        </AuthField>
+
+        <AuthField>
+          <AuthLabel htmlFor="signup-gender">Gender (optional)</AuthLabel>
+          <AuthInput
+            as="select"
+            id="signup-gender"
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+          >
+            <option value="">Prefer not to say</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="unspecified">Non-binary / other</option>
+          </AuthInput>
         </AuthField>
 
         <AuthField>

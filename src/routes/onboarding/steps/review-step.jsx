@@ -42,6 +42,7 @@ const ReviewStep = ({ wizard, onBack }) => {
         : null;
 
     const payload = {
+      gender: measurements.gender || null,
       heightCm: Number(measurements.heightCm) || null,
       weightKg: Number(measurements.weightKg) || null,
       chestCm: Number(measurements.chestCm) || null,

@@ -62,6 +62,15 @@ const MeasurementsStep = ({ wizard, onAdvance, onBack }) => {
           </Field>
         ))}
         <Field>
+          <span>Gender</span>
+          <select name="gender" value={measurements.gender || ""} onChange={handleChange}>
+            <option value="">Prefer not to say</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="unspecified">Non-binary / other</option>
+          </select>
+        </Field>
+        <Field>
           <span>Preferred fit</span>
           <select name="preferredFit" value={measurements.preferredFit} onChange={handleChange}>
             <option value="slim">Slim</option>

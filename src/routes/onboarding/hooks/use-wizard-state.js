@@ -10,6 +10,7 @@ const INITIAL_STATE = {
   capture: { photoDataUrl: "", source: null, capturedAt: null },
   inference: null,
   measurements: {
+    gender: "",
     heightCm: "",
     weightKg: "",
     chestCm: "",

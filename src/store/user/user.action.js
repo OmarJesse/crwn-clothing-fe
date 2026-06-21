@@ -19,11 +19,12 @@ export const signInSuccess = (tokens, user) =>
 export const signInFailed = (error) =>
   createAction(USER_ACTION_TYPES.SIGN_IN_FAILED, error);
 
-export const signUpStart = (email, password, displayName) =>
+export const signUpStart = (email, password, displayName, gender = null) =>
   createAction(USER_ACTION_TYPES.SIGN_UP_START, {
     email,
     password,
     displayName,
+    gender,
   });
 
 export const signUpSuccess = (tokens, user, onboardingRequired = false) =>

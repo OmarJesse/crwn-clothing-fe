@@ -72,6 +72,7 @@ const Shop = () => {
     activeChips,
     SIZE_CHOICES,
     FIT_CHOICES,
+    GENDER_CHOICES,
   } = useShopFilters({
     initialCategory: categoryParam || null,
     products: allProducts,
@@ -204,6 +205,23 @@ const Shop = () => {
                   onClick={() => toggleInArray("sizes", s)}
                 >
                   {s}
+                </SizeButton>
+              ))}
+            </SizeButtons>
+          </Section>
+
+          <Section>
+            <h3>Gender</h3>
+            <SizeButtons>
+              {GENDER_CHOICES.map((g) => (
+                <SizeButton
+                  key={g}
+                  type="button"
+                  $active={filters.genders.includes(g)}
+                  onClick={() => toggleInArray("genders", g)}
+                  style={{ minWidth: "4.5rem", textTransform: "capitalize" }}
+                >
+                  {g}
                 </SizeButton>
               ))}
             </SizeButtons>

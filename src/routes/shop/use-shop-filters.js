@@ -12,6 +12,7 @@ export const SORT_OPTIONS = [
 
 const SIZE_CHOICES = ["XS", "S", "M", "L", "XL", "XXL"];
 const FIT_CHOICES = ["slim", "regular", "oversized"];
+const GENDER_CHOICES = ["women", "men", "unisex"];
 
 const DEFAULT_FILTERS = {
   search: "",
@@ -20,6 +21,7 @@ const DEFAULT_FILTERS = {
   fitFirst: false,
   sizes: [],
   fitTypes: [],
+  genders: [],
   priceMin: "",
   priceMax: "",
   matchPaletteOnly: false,
@@ -86,6 +88,11 @@ export const useShopFilters = ({ initialCategory, products, bodyProfile, stylePr
       }
       if (filters.fitTypes.length > 0 && product.fitType) {
         if (!filters.fitTypes.includes(product.fitType)) return false;
+      }
+      if (filters.genders.length > 0) {
+        // Unisex always shows alongside a selected men/women filter.
+        const g = product.gender || "unisex";
+        if (!filters.genders.includes(g) && g !== "unisex") return false;
       }
       if (filters.fitFirst && bodyProfile) {
         if (!product._recommendation?.recommendedSize) return false;
@@ -158,6 +165,9 @@ export const useShopFilters = ({ initialCategory, products, bodyProfile, stylePr
     filters.fitTypes.forEach((f) =>
       chips.push({ key: `fit-${f}`, label: `${f} fit`, clear: () => toggleInArray("fitTypes", f) })
     );
+    filters.genders.forEach((g) =>
+      chips.push({ key: `gender-${g}`, label: g, clear: () => toggleInArray("genders", g) })
+    );
     if (filters.priceMin !== "" || filters.priceMax !== "") {
       chips.push({
         key: "price",
@@ -178,5 +188,6 @@ export const useShopFilters = ({ initialCategory, products, bodyProfile, stylePr
     activeChips,
     SIZE_CHOICES,
     FIT_CHOICES,
+    GENDER_CHOICES,
   };
 };

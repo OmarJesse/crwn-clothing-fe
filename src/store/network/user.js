@@ -13,12 +13,13 @@ export const signInWithEmail = async (email, password) => {
 };
 
 // Function to sign up a new user
-export const signUp = async (email, password, displayName) => {
+export const signUp = async (email, password, displayName, gender = null) => {
   try {
     const response = await axios.post('/register', {
       email,
       password,
       name: displayName,
+      gender,
     });
     return response.data;  // Assume the response contains user data and token
   } catch (error) {
