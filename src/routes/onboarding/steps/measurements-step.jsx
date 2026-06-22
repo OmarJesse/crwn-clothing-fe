@@ -67,7 +67,6 @@ const MeasurementsStep = ({ wizard, onAdvance, onBack }) => {
             <option value="">Prefer not to say</option>
             <option value="female">Female</option>
             <option value="male">Male</option>
-            <option value="unspecified">Non-binary / other</option>
           </select>
         </Field>
         <Field>

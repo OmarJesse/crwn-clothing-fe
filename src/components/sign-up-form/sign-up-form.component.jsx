@@ -107,7 +107,6 @@ const SignUpForm = () => {
             <option value="">Prefer not to say</option>
             <option value="female">Female</option>
             <option value="male">Male</option>
-            <option value="unspecified">Non-binary / other</option>
           </AuthInput>
         </AuthField>
 
