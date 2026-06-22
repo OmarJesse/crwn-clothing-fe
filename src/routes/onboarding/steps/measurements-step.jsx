@@ -63,10 +63,9 @@ const MeasurementsStep = ({ wizard, onAdvance, onBack }) => {
         ))}
         <Field>
           <span>Gender</span>
-          <select name="gender" value={measurements.gender || ""} onChange={handleChange}>
-            <option value="">Prefer not to say</option>
-            <option value="female">Female</option>
+          <select name="gender" value={measurements.gender || "male"} onChange={handleChange}>
             <option value="male">Male</option>
+            <option value="female">Female</option>
           </select>
         </Field>
         <Field>

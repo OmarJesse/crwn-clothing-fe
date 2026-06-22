@@ -29,7 +29,7 @@ const computePasswordStrength = (password) => {
 
 const SignUpForm = () => {
   const [displayName, setDisplayName] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState("male");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -97,16 +97,15 @@ const SignUpForm = () => {
         </AuthField>
 
         <AuthField>
-          <AuthLabel htmlFor="signup-gender">Gender (optional)</AuthLabel>
+          <AuthLabel htmlFor="signup-gender">Gender</AuthLabel>
           <AuthInput
             as="select"
             id="signup-gender"
             value={gender}
             onChange={(e) => setGender(e.target.value)}
           >
-            <option value="">Prefer not to say</option>
-            <option value="female">Female</option>
             <option value="male">Male</option>
+            <option value="female">Female</option>
           </AuthInput>
         </AuthField>
 

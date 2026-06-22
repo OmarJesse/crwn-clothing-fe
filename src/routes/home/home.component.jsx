@@ -7,6 +7,7 @@ import Directory from "../../components/directory/directory.component";
 import Button from "../../components/button/button.component";
 import { getCategories } from "../../store/network/category";
 import { getRecommendedSize } from "../../utils/size-recommendation";
+import { productMatchesUserGender } from "../../utils/gender";
 import { scoreProductStyle, scoreProductPreferences } from "../../utils/product-style-match";
 import { getBucketLabel } from "../../utils/style-inference";
 import {
@@ -206,15 +207,22 @@ const Home = () => {
       preferredStyles: bodyProfile?.preferredStyles,
       preferredPalettes: bodyProfile?.preferredPalettes,
     };
-    const flattened = categories.flatMap((category) =>
-      (category.products || []).map((product) => ({
+    const flattened = categories
+      .flatMap((category) =>
+        (category.products || []).map((product) => ({
+          ...product,
+          categoryName: category.name,
+        }))
+      )
+      // Never recommend the opposite gender (a male profile only sees men +
+      // unisex, and vice-versa). Unset gender imposes no restriction.
+      .filter((product) => productMatchesUserGender(product, bodyProfile?.gender))
+      .map((product) => ({
         ...product,
-        categoryName: category.name,
         recommendation: getRecommendedSize(product, bodyProfile),
         styleMatch: scoreProductStyle(product, styleProfile),
         prefsMatch: scoreProductPreferences(product, prefs),
-      }))
-    );
+      }));
 
     return flattened
       .map((product) => ({

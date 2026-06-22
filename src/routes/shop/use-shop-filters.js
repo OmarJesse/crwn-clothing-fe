@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { getRecommendedSize, normalizeSizeChart } from "../../utils/size-recommendation";
 import { scoreProductStyle, scoreProductPreferences } from "../../utils/product-style-match";
+import { allowedProductGenders } from "../../utils/gender";
 
 export const SORT_OPTIONS = [
   { value: "recommended", label: "Recommended" },
@@ -89,10 +90,16 @@ export const useShopFilters = ({ initialCategory, products, bodyProfile, stylePr
       if (filters.fitTypes.length > 0 && product.fitType) {
         if (!filters.fitTypes.includes(product.fitType)) return false;
       }
-      if (filters.genders.length > 0) {
-        // Unisex always shows alongside a selected men/women filter.
+      // Gender: explicit chips win (and always include unisex); otherwise fall
+      // back to the shopper's own gender, so a male profile defaults to men +
+      // unisex (no dresses recommended) — still overridable by the chips.
+      const effectiveGenders =
+        filters.genders.length > 0
+          ? Array.from(new Set([...filters.genders, "unisex"]))
+          : allowedProductGenders(bodyProfile?.gender);
+      if (effectiveGenders) {
         const g = product.gender || "unisex";
-        if (!filters.genders.includes(g) && g !== "unisex") return false;
+        if (!effectiveGenders.includes(g)) return false;
       }
       if (filters.fitFirst && bodyProfile) {
         if (!product._recommendation?.recommendedSize) return false;
